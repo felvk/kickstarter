@@ -1,0 +1,11 @@
+.header-container
+  header.wrapper.clearfix
+    .navbar.navbar-inverse.navbar-static-top
+      .container
+        .navbar-header
+          a.navbar-brand(href='/') h1.title
+        nav.navbar-collapse.collapse
+          ul.nav.navbar-nav
+            each val in [0,1,2,4,5]
+              li
+                a(href='#') nav ul li a

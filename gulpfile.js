@@ -1,81 +1,155 @@
-var gulp = require('gulp');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var imagemin = require('gulp-imagemin');
-var prefix = require('gulp-autoprefixer');
-var compass = require('gulp-compass');
-var svg2png = require('gulp-svg2png');
-var cssmin = require('gulp-cssmin');
+var gulp            = require('gulp'),
+    sass            = require('gulp-ruby-sass'),
+    autoprefixer    = require('gulp-autoprefixer'),
+    minifycss       = require('gulp-minify-css'),
+    jshint          = require('gulp-jshint'),
+    uglify          = require('gulp-uglify'),
+    imagemin        = require('gulp-imagemin'),
+    rename          = require('gulp-rename'),
+    clean           = require('gulp-clean'),
+    concat          = require('gulp-concat'),
+    notify          = require('gulp-notify'),
+    cache           = require('gulp-cache'),
+    livereload      = require('gulp-livereload'),
+    compass         = require('gulp-compass'),
+    jade            = require('gulp-jade'),
+    expressService  = require('gulp-express-service'),
+    flatten         = require('gulp-flatten');
 
 
 var paths = {
-  scripts: ['./js/*.js', './js/**/*.js'],
-  vendorscripts: ['./js/vendor/*.js', './js/bootstrap/*.js'],
-  images: ['./img/*'],
-  styles: './css/*.css',
-  sass: './sass/*.scss'
+  src           : 'src',
+  build         : 'build',
+  scripts       : ['src/scripts/*.js', 'src/scripts/**/*.js'],
+  vendorscripts : ['src/scripts/vendor/*.js', 'src/scripts/bootstrap/*.js'],
+  images        : ['src/images/**/*'],
+  css           : 'src/styles/*.css',
+  sass          : 'src/styles/*.scss'
 };
 
 
-gulp.task('default', function() {
-  // place code for your default task here
+gulp.task('default', ['clean'], function() {
+    gulp.start('jade','styles', 'scripts', 'images', 'fonts', 'watch', 'themes');
 });
 
-gulp.task('scripts', function() {
-  return gulp.src(paths.scripts)
-    .pipe(uglify())
-    .pipe(concat('all.min.js'))
-    .pipe(gulp.dest('./build/js'));
+
+gulp.task('jade', function() {
+  var YOUR_LOCALS = {};
+
+  return gulp.src(['src/views/**/*.jade', '!src/views/shared'])
+    .pipe(jade({
+      locals: YOUR_LOCALS,
+      pretty: true
+    }))
+    .pipe(gulp.dest('build/views'))
+    .pipe(notify({ message: 'Jade task complete' }));
 });
 
-// 
-gulp.task('vendorscripts', function() {
-  return gulp.src(paths.vendorscripts)
-    .pipe(uglify())
-    .pipe(concat('vendor.js'))
-    .pipe(gulp.dest('./js'));
-});
 
 gulp.task('styles', function() {
-  return gulp.src(paths.styles)
-    .pipe(cssmin())
-    .pipe(concat('all.min.css'))
-    .pipe(gulp.dest('./build/css'));
-});
-
-gulp.task('prefix', function() {
-  gulp.src('./css/*.css')
-    .pipe(prefix(["last 1 version", "> 1%", "ie 8"], { cascade: true }))
-    .pipe(gulp.dest('./css'));
-});
-
-gulp.task('compass', function() {
-  return gulp.src(paths.sass)
+  return gulp.src('src/styles/main.scss')
     .pipe(compass({
       config_file: './config.rb',
-      css: 'css',
-      sass: 'sass'
+      css: 'build/styles',
+      sass: 'src/styles'
     }))
-    .pipe(gulp.dest('./css'));
+    //.pipe(sass({ style: 'expanded', sourcemap: true, sourcemapPath: 'src/styles' }))
+    .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'))
+    .pipe(gulp.dest('build/styles'))
+    .pipe(rename({suffix: '.min'}))
+    .pipe(minifycss())
+    .pipe(gulp.dest('build/styles'))
+    .pipe(notify({ message: 'Styles task complete' }));
 });
+
+
+gulp.task('themes', function() {
+  return gulp.src('src/styles/themes/**/theme.scss')
+    .pipe(compass({
+      config_file: './config.rb',
+      css: 'build/styles',
+      sass: 'src/styles'
+    }))
+    //.pipe(sass({ style: 'expanded', sourcemap: true, sourcemapPath: 'src/styles' }))
+    .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'))
+    .pipe(flatten())
+    .pipe(gulp.dest('build/styles/themes/'))
+    .pipe(rename({suffix: '.min'}))
+    .pipe(minifycss())
+    .pipe(gulp.dest('build/styles/themes/'))
+    .pipe(notify({ message: 'Themes task complete' }));
+});
+
+
+gulp.task('scripts', function() {
+  return gulp.src(['src/scripts/*.js', 'src/scripts/**/*.js', '!src/scripts/bootstrap/*.js', '!src/scripts/vendor/*.js'])
+    //.pipe(jshint('.jshintrc'))
+    .pipe(jshint.reporter('default'))
+    .pipe(concat('main.js'))
+    .pipe(gulp.dest('build/scripts'))
+    .pipe(rename({suffix: '.min'}))
+    .pipe(uglify())
+    .pipe(gulp.dest('build/scripts'))
+    .pipe(notify({ message: 'Scripts task complete' }));
+});
+
 
 gulp.task('images', function() {
- return gulp.src(paths.images)
-    .pipe(imagemin({optimizationLevel: 5}))
-    .pipe(gulp.dest('./build/img'));
+  return gulp.src('src/images/**/*')
+    .pipe(cache(imagemin({ optimizationLevel: 5, progressive: true, interlaced: true })))
+    .pipe(gulp.dest('build/images'))
+    .pipe(notify({ message: 'Images task complete' }));
 });
+
 
 gulp.task('svg2png', function () {
-  return gulp.src(['./img/*.svg', './img/**/*.svg'])
-        .pipe(svg2png())
-        .pipe(gulp.dest('./build/img/converted-svg'));
+  return gulp.src(['src/images/*.svg', 'src/images/**/*.svg'])
+    .pipe(svg2png())
+    .pipe(gulp.dest('build/images/converted-svg'))
+    .pipe(notify({ message: 'SVG2PNG task complete' }));
 });
+
+
+gulp.task('fonts', function() {
+  return gulp.src('src/fonts/**/*')
+    .pipe(gulp.dest('build/fonts'))
+    .pipe(notify({ message: 'Fonts task complete' }));
+});
+
+
+gulp.task('clean', function() {
+  return gulp.src(['build/styles', 'build/scripts', 'build/images'], {read: false})
+    .pipe(clean());
+});
+
+
+gulp.task('server', function() {
+  return gulp.src('./')
+    .pipe(expressService({file:'./server.js', NODE_ENV:'DEV'}));
+});
+
 
 gulp.task('watch', function() {
-  gulp.watch(paths.sass, ['compass']);
-  gulp.watch(paths.styles, ['prefix']);
+  // Watch .jade files
+  gulp.watch('src/views/**/*.jade', ['jade']);
+  // Watch .scss files
+  gulp.watch('src/styles/**/*.scss', ['styles']);
+  // Watch .js files
+  gulp.watch('src/scripts/**/*.js', ['scripts']);
+  // Watch image files
+  gulp.watch('src/images/**/*', ['images']);
+  // Watch font files
+  gulp.watch('src/fonts/**/*', ['fonts']);
+  // Watch theme files
+  gulp.watch('src/styles/themes/**/*.scss', ['themes']);
+
+  // Create LiveReload server
+  var server = livereload();
+  // Watch any files in build/, reload on change
+  gulp.watch(['build/**']).on('change', function(file) {
+    server.changed(file.path);
+  });
 });
 
 
-gulp.task('default', ['scripts', 'vendorscripts', 'compass', 'prefix', 'styles', 'images', 'svg2png', 'watch']);
 

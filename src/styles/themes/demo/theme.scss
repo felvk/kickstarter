@@ -1,0 +1,15 @@
+// load default settings
+@import "../../settings";
+
+// overwrite defaults with current settings
+@import "variables";
+
+// load default styles with current settings
+@import "../../base";
+
+// theme overwrite styles
+
+body {
+  background-color: $main_color;
+  color: $text_color;
+}

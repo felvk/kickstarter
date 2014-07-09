@@ -1,0 +1,26 @@
+
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>OEW Kickstarter</title>
+  <meta name="description" content=""/>
+  <meta name="viewport" content="width=device-width"/>
+  <link rel="stylesheet" href="../../styles/main.css"/>
+  <script>
+    if(/theme=/i.test(window.location.href)) {
+      var pos1 = window.location.href.indexOf('theme=') + 'theme='.length;
+      var pos2 = window.location.href.indexOf('&', pos1);
+      var theme;
+      if(pos2) {
+        theme = window.location.href.slice(pos1, pos2);
+      }
+      else {
+        theme = window.location.href.slice(pos1);
+      }
+      var link = document.createElement('link');
+      link.setAttribute('rel', 'stylesheet');
+      link.setAttribute('href', '../../styles/themes/' + theme + '.css');
+      document.querySelector('head').appendChild(link);
+    }
+  </script>
+</head>

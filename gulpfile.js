@@ -14,17 +14,19 @@ var gulp            = require('gulp'),
     compass         = require('gulp-compass'),
     jade            = require('gulp-jade'),
     expressService  = require('gulp-express-service'),
-    flatten         = require('gulp-flatten');
+    flatten         = require('gulp-flatten'),
+    browserify      = require('gulp-browserify');
 
 
 var paths = {
-  src           : 'src',
-  build         : 'build',
-  scripts       : ['src/scripts/*.js', 'src/scripts/**/*.js'],
-  vendorscripts : ['src/scripts/vendor/*.js', 'src/scripts/bootstrap/*.js'],
-  images        : ['src/images/**/*'],
-  css           : 'src/styles/*.css',
-  sass          : 'src/styles/*.scss'
+  srcViews          : ['src/views/**/*.html', '!src/views/**/_*.html'],
+  buildViews        : ['build/views/**/*.html', '!build/views/**/_*.html'],
+  srcScripts        : ['src/scripts/*.js', 'src/scripts/**/*.js'],
+  buildScripts      : ['build/scripts/*.js', 'build/scripts/**/*.js'],
+  srcImages         : ['src/images/**/*'],
+  buildImages       : ['build/images/**/*'],
+  buildStyles       : 'build/styles/*.css',
+  srcStyles         : 'src/styles/*.scss'
 };
 
 
@@ -32,7 +34,7 @@ gulp.task('default', ['clean'], function() {
     gulp.start('jade','styles', 'scripts', 'images', 'fonts', 'watch', 'themes');
 });
 
-
+// Compile jade templates to html
 gulp.task('jade', function() {
   var YOUR_LOCALS = {};
 
@@ -46,6 +48,7 @@ gulp.task('jade', function() {
 });
 
 
+// Process sass files width compass and set vendor prefixes needed for css and minify them
 gulp.task('styles', function() {
   return gulp.src('src/styles/main.scss')
     .pipe(compass({
@@ -62,9 +65,9 @@ gulp.task('styles', function() {
     .pipe(notify({ message: 'Styles task complete' }));
 });
 
-
+// Create stand alone css theme files 
 gulp.task('themes', function() {
-  return gulp.src('src/styles/themes/**/theme.scss')
+  return gulp.src(['src/styles/themes/**/*.scss', '!src/styles/themes/**/_*'])
     .pipe(compass({
       config_file: './config.rb',
       css: 'build/styles',
@@ -80,9 +83,9 @@ gulp.task('themes', function() {
     .pipe(notify({ message: 'Themes task complete' }));
 });
 
-
-gulp.task('scripts', function() {
-  return gulp.src(['src/scripts/*.js', 'src/scripts/**/*.js', '!src/scripts/bootstrap/*.js', '!src/scripts/vendor/*.js'])
+// Concat and minify js files
+gulp.task('scripts', ['browserify'], function() {
+  return gulp.src(['src/scripts/bundle/*.js'])//, 'src/scripts/**/*.js', '!src/scripts/bootstrap/*.js', '!src/scripts/vendor/*.js'])
     //.pipe(jshint('.jshintrc'))
     .pipe(jshint.reporter('default'))
     .pipe(concat('main.js'))
@@ -93,7 +96,15 @@ gulp.task('scripts', function() {
     .pipe(notify({ message: 'Scripts task complete' }));
 });
 
+// Enable ability to include js files into other js files
+gulp.task('browserify', function() {
+  return gulp.src('src/scripts/main.js')
+    .pipe(browserify({ insertGlobals: true }))
+    .pipe(rename({suffix: '.bundle'}))
+    .pipe(gulp.dest('src/scripts/bundle'));
+});
 
+// Optimize images and reduce file size
 gulp.task('images', function() {
   return gulp.src('src/images/**/*')
     .pipe(cache(imagemin({ optimizationLevel: 5, progressive: true, interlaced: true })))
@@ -101,7 +112,7 @@ gulp.task('images', function() {
     .pipe(notify({ message: 'Images task complete' }));
 });
 
-
+// Convert SVG to PNG and minifies SVG files
 gulp.task('svg2png', function () {
   return gulp.src(['src/images/*.svg', 'src/images/**/*.svg'])
     .pipe(svg2png())
@@ -109,7 +120,7 @@ gulp.task('svg2png', function () {
     .pipe(notify({ message: 'SVG2PNG task complete' }));
 });
 
-
+// Copy all fonts in src to build
 gulp.task('fonts', function() {
   return gulp.src('src/fonts/**/*')
     .pipe(gulp.dest('build/fonts'))
@@ -122,7 +133,7 @@ gulp.task('clean', function() {
     .pipe(clean());
 });
 
-
+// Start NodeJS Server
 gulp.task('server', function() {
   return gulp.src('./')
     .pipe(expressService({file:'./server.js', NODE_ENV:'DEV'}));

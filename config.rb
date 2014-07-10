@@ -3,7 +3,7 @@ require 'bootstrap-sass'
 
 
 # Set this to the root of your project when deployed:
-http_path = "file:///Users/triedel/Development/oew/oew-kickstarter"
+http_path = "localhost:9999/oew/kickstarter"
 css_dir = "build/styles"
 sass_dir = "src/styles"
 images_dir = "build/images"

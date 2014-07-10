@@ -1,0 +1,14 @@
+// load default settings
+@import "../../settings";
+
+// overwrite defaults with current settings
+@import "variables";
+
+// load default styles with current settings
+@import "../../base";
+
+// theme overwrite styles
+
+h1, h2, p {
+  @include single-text-shadow(2px, 2px, 6px, 1px, rgba(0,0,0,0.5));
+}

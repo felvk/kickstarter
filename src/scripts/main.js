@@ -1,2 +1,4 @@
 
-//var theme = require('../../scripts/modules/theme');
+var setTheme = require('./modules/theme');
+
+setTheme();

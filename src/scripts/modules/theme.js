@@ -1,7 +1,5 @@
 module.exports = function theme() {
 
-  return function applyTheme() {
-
     var pos1, pos2, themeName, link;
 
     if(/theme=/i.test(window.location.href)) {
@@ -15,18 +13,11 @@ module.exports = function theme() {
         themeName = window.location.href.slice(pos1);
       }
 
-      var mainStyles = document.querySelector('#main-styles');
-      mainStyles.setAttribute('href', mainStyles.getAttribute('href').replace('main.css', 'themes/' + theme + '.css'));
-
-      // if(themeName.length) {
-      //   link = document.createElement('link');
-      //   link.setAttribute('rel', 'stylesheet');
-      //   link.setAttribute('href', '../../styles/themes/' + theme + '.css');
-      //   document.querySelector('head').appendChild(link);
-      // }
+      if(themeName.length) {
+        var mainStyles = document.querySelector('#main-styles');
+        mainStyles.setAttribute('href', mainStyles.getAttribute('href').replace('main.css', 'themes/' + themeName + '.css'));
+      }
 
     }
-
-  };
 
 };
